@@ -146,7 +146,7 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
         int hour;
         try {
             hour = Integer.parseInt(hourText.split(":")[0]);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             statusLabel.setText("Formato ora non valido.");
             statusLabel.setVisible(true);
             return;

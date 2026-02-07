@@ -29,6 +29,7 @@ public class ManageAppointmentCtrlGrafico extends HomeCtrlGrafico {
     @FXML private Label lblOra;
     @FXML private Label lblStato;
 
+    private static final String ERRORE_DB = "Errore Database";
     private static final Logger LOGGER = Logger.getLogger(ManageAppointmentCtrlGrafico.class.getName());
     private ManageAppointmentCtrlApplicativo ctrlApplicativo;
     private AppointmentBean selectedAppointment;
@@ -59,7 +60,7 @@ public class ManageAppointmentCtrlGrafico extends HomeCtrlGrafico {
 
         } catch (DBException e) {
             LOGGER.log(Level.SEVERE, "Errore caricamento attesa", e);
-            showError("Errore Database", "Impossibile caricare gli appuntamenti.");
+            showError(ERRORE_DB, "Impossibile caricare gli appuntamenti.");
         }
     }
 
@@ -105,7 +106,7 @@ public class ManageAppointmentCtrlGrafico extends HomeCtrlGrafico {
 
         } catch (DBException e) {
             LOGGER.log(Level.SEVERE, "Errore conferma", e);
-            showError("Errore Database", "Impossibile confermare l'appuntamento:\n" + e.getMessage());
+            showError(ERRORE_DB, "Impossibile confermare l'appuntamento:\n" + e.getMessage());
         } catch (IllegalArgumentException e) {
             showError("Attenzione", e.getMessage());
         }
@@ -123,7 +124,7 @@ public class ManageAppointmentCtrlGrafico extends HomeCtrlGrafico {
 
         } catch (DBException e) {
             LOGGER.log(Level.SEVERE, "Errore rifiuto", e);
-            showError("Errore Database", "Impossibile rifiutare l'appuntamento:\n" + e.getMessage());
+            showError(ERRORE_DB, "Impossibile rifiutare l'appuntamento:\n" + e.getMessage());
         } catch (IllegalArgumentException e) {
             showError("Attenzione", e.getMessage());
         }
