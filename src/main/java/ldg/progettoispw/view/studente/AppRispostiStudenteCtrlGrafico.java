@@ -17,8 +17,15 @@ import ldg.progettoispw.view.HomeCtrlGrafico;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AppRispostiStudenteCtrlGrafico extends HomeCtrlGrafico implements Initializable {
+
+    // Costante per lo stile della lista (Glassmorphism)
+    private static final String ITEM_STYLE = "-fx-background-color: #3498DB55; -fx-padding: 10; " +
+            "-fx-background-radius: 10; -fx-border-color: white; " +
+            "-fx-cursor: hand;";
 
     @FXML private VBox resultsContainer;
     @FXML private AnchorPane appointmentPane;
@@ -33,11 +40,13 @@ public class AppRispostiStudenteCtrlGrafico extends HomeCtrlGrafico implements I
     @FXML private Button btnInviaRecensione;
     @FXML private Label lblErroreRecensione;
 
+    private static final Logger LOGGER = Logger.getLogger(AppRispostiStudenteCtrlGrafico.class.getName());
     private AppRispostiStudenteCtrlApplicativo ctrlApp;
     private AppointmentBean selectedAppointment;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Inizializza il controller applicativo
         ctrlApp = new AppRispostiStudenteCtrlApplicativo();
         appointmentPane.setVisible(false);
         caricaLista();
@@ -59,9 +68,12 @@ public class AppRispostiStudenteCtrlGrafico extends HomeCtrlGrafico implements I
                 resultsContainer.getChildren().add(createBox(bean));
             }
 
-        } catch (DBException _) {
+        } catch (DBException e) {
+            // Uso 'e' nel logger per evitare lo smell "Unused variable"
+            LOGGER.log(Level.SEVERE, "Errore nel caricamento storico", e);
             showError("Errore Database", "Impossibile recuperare lo storico.");
         } catch (IllegalStateException e) {
+            LOGGER.log(Level.WARNING, "Errore sessione", e);
             showError("Errore Sessione", e.getMessage());
         }
     }
@@ -103,6 +115,7 @@ public class AppRispostiStudenteCtrlGrafico extends HomeCtrlGrafico implements I
             openDetails(selectedAppointment);
 
         } catch (DBException e) {
+            LOGGER.log(Level.SEVERE, "Errore durante il pagamento", e);
             showError("Errore Pagamento", "Transazione fallita: " + e.getMessage());
         }
     }
@@ -144,7 +157,8 @@ public class AppRispostiStudenteCtrlGrafico extends HomeCtrlGrafico implements I
     private VBox createBox(AppointmentBean bean) {
         VBox box = new VBox();
         box.setSpacing(5);
-        box.setStyle("-fx-background-color: #3498DB55; -fx-padding: 10; -fx-background-radius: 10; -fx-border-color: white; -fx-cursor: hand;");
+        // Uso la costante di stile
+        box.setStyle(ITEM_STYLE);
 
         Label t = new Label("Tutor: " + bean.getTutorEmail());
         Label s = new Label("Stato: " + bean.getStato());

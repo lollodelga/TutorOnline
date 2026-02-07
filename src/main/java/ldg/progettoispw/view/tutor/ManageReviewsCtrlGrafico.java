@@ -6,9 +6,8 @@ import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
-
 import ldg.progettoispw.controller.ManageReviewCtrlApplicativo;
 import ldg.progettoispw.engineering.bean.RecensioneBean;
 import ldg.progettoispw.view.HomeCtrlGrafico;
@@ -19,14 +18,14 @@ import java.util.logging.Logger;
 
 public class ManageReviewsCtrlGrafico extends HomeCtrlGrafico {
 
-    @FXML
-    private BarChart<String, Number> barChart;
+    // Costante per lo stile della lista (Glassmorphism)
+    private static final String ITEM_STYLE = "-fx-background-color: #3498DB55; -fx-padding: 10; " +
+            "-fx-background-radius: 10; -fx-border-color: white; ";
 
-    @FXML
-    private VBox reviewsContainer;
+    @FXML private BarChart<String, Number> barChart;
+    @FXML private VBox reviewsContainer;
 
     private ManageReviewCtrlApplicativo controllerApplicativo;
-
     private static final Logger LOGGER = Logger.getLogger(ManageReviewsCtrlGrafico.class.getName());
 
     @Override
@@ -35,19 +34,17 @@ public class ManageReviewsCtrlGrafico extends HomeCtrlGrafico {
         controllerApplicativo = new ManageReviewCtrlApplicativo();
 
         try {
-            // Recupero liste dal controller applicativo
+            // Recupero dati
             ManageReviewCtrlApplicativo.RecensioniResult result = controllerApplicativo.getRecensioniEValoriSentiment();
             List<RecensioneBean> recensioni = result.getRecensioni();
             List<Integer> sentimentValues = result.getSentimentValues();
 
-            // Popolo il grafico
             popolaGrafico(sentimentValues);
-
-            // Popolo la lista recensioni
             popolaListaRecensioni(recensioni);
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Errore nel caricamento delle recensioni o nel grafico", e);
+            LOGGER.log(Level.SEVERE, "Errore nel caricamento delle recensioni", e);
+            showError("Errore", "Impossibile caricare le statistiche.");
         }
     }
 
@@ -63,7 +60,7 @@ public class ManageReviewsCtrlGrafico extends HomeCtrlGrafico {
         }
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Numero Recensioni");
+        series.setName("Valutazioni");
 
         for (int i = 0; i < counts.length; i++) {
             series.getData().add(new XYChart.Data<>(String.valueOf(i + 1), counts[i]));
@@ -71,29 +68,48 @@ public class ManageReviewsCtrlGrafico extends HomeCtrlGrafico {
 
         barChart.getData().add(series);
 
-        // Opzionale: impostare assi se non definiti in FXML
+        // Configurazioni assi
         CategoryAxis xAxis = (CategoryAxis) barChart.getXAxis();
         xAxis.setLabel("Stelle");
 
         NumberAxis yAxis = (NumberAxis) barChart.getYAxis();
-        yAxis.setLabel("Numero Recensioni");
+        yAxis.setLabel("Numero");
     }
 
     private void popolaListaRecensioni(List<RecensioneBean> recensioni) {
         reviewsContainer.getChildren().clear();
 
+        if (recensioni.isEmpty()) {
+            Label empty = new Label("Nessuna recensione ricevuta.");
+            empty.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+            reviewsContainer.getChildren().add(empty);
+            return;
+        }
+
         for (RecensioneBean bean : recensioni) {
-            TextArea ta = new TextArea("Studente: " + bean.getStudentEmail() +
-                    "\nRecensione: " + bean.getRecensione() +
-                    "\nStelle: " + bean.getSentimentValue());
-            ta.setWrapText(true);
-            ta.setEditable(false);
-            ta.setMaxWidth(480); // adatta alla larghezza del VBox
-            ta.setStyle("-fx-control-inner-background: #3498DBAA; -fx-text-fill: white; -fx-font-size: 14px;");
-            reviewsContainer.getChildren().add(ta);
+            reviewsContainer.getChildren().add(createReviewBox(bean));
         }
     }
 
+    // Helper per creare il box in stile Glassmorphism (sostituisce la vecchia TextArea)
+    private VBox createReviewBox(RecensioneBean bean) {
+        VBox box = new VBox();
+        box.setSpacing(5);
+        box.setStyle(ITEM_STYLE);
+
+        Label studentLabel = new Label("Studente: " + bean.getStudentEmail());
+        studentLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        Label ratingLabel = new Label("Voto: " + bean.getSentimentValue() + "/5");
+        ratingLabel.setStyle("-fx-text-fill: #f1c40f; -fx-font-weight: bold;"); // Giallo per le stelle
+
+        Label reviewText = new Label(bean.getRecensione());
+        reviewText.setStyle("-fx-text-fill: #ecf0f1; -fx-font-style: italic;");
+        reviewText.setWrapText(true);
+
+        box.getChildren().addAll(studentLabel, ratingLabel, reviewText);
+        return box;
+    }
 
     @FXML
     private void backAction(ActionEvent event) {

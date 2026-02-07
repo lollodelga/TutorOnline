@@ -19,17 +19,24 @@ import java.util.logging.Logger;
 
 public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
 
+    // Costante per lo stile della lista (Glassmorphism)
+    private static final String ITEM_STYLE = "-fx-background-color: #3498DB55; -fx-padding: 10; " +
+            "-fx-background-radius: 10; -fx-border-color: white; " +
+            "-fx-cursor: hand; -fx-alignment: CENTER_LEFT;";
+
     @FXML private TextField subjectField;
     @FXML private ScrollPane scrollResults;
     @FXML private Label errorLabel;
     @FXML private VBox resultsContainer;
+
+    // Popup Prenotazione
+    @FXML private AnchorPane appointmentPane;
+    @FXML private Label lblSelectedTutor; // Aggiunto per mostrare il nome nel popup
     @FXML private DatePicker datePicker;
     @FXML private ComboBox<String> hourCombo;
     @FXML private Label statusLabel;
-    @FXML private AnchorPane appointmentPane;
 
     private static final Logger LOGGER = Logger.getLogger(BookAppointmentCtrlGrafico.class.getName());
-
     private final BookAppointmentCtrlApplicativo appCtrl = new BookAppointmentCtrlApplicativo();
     private TutorBean selectedTutor;
 
@@ -47,6 +54,7 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
     public void searchTutor() {
         resultsContainer.getChildren().clear();
         errorLabel.setVisible(false);
+        scrollResults.setVisible(false);
 
         String subjectInput = subjectField.getText().trim();
         if (subjectInput.isEmpty()) {
@@ -72,12 +80,11 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
             for (TutorBean tutor : limitedTutors) {
                 String materie = String.join(", ", tutor.getMaterie());
                 Button tutorButton = new Button(
-                        tutor.getNome() + " " + tutor.getCognome() + " — " + materie
+                        tutor.getNome() + " " + tutor.getCognome() + "\nMaterie: " + materie
                 );
-                tutorButton.setStyle(
-                        "-fx-font-size: 15px; -fx-background-color: #f0f0f0; " +
-                                "-fx-padding: 6; -fx-background-radius: 10; -fx-cursor: hand;"
-                );
+
+                // Applicazione dello stile uniforme
+                tutorButton.setStyle(ITEM_STYLE + " -fx-font-size: 14px; -fx-text-fill: white;");
                 tutorButton.setMaxWidth(Double.MAX_VALUE);
 
                 tutorButton.setOnAction(e -> selectTutor(tutor));
@@ -96,11 +103,11 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
     private void selectTutor(TutorBean tutor) {
         this.selectedTutor = tutor;
 
-        errorLabel.setText("Tutor selezionato: " + tutor.getNome() + " " + tutor.getCognome());
-        errorLabel.setVisible(true);
+        // Imposto il testo nel popup
+        lblSelectedTutor.setText("Con: " + tutor.getNome() + " " + tutor.getCognome());
 
+        // Resetto stati
         appointmentPane.setVisible(true);
-
         statusLabel.setVisible(false);
         datePicker.setValue(LocalDate.now());
     }
@@ -109,9 +116,6 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
     private void cancelSelection(ActionEvent event) {
         appointmentPane.setVisible(false);
         selectedTutor = null;
-
-        errorLabel.setText("Nessun tutor selezionato. Seleziona un altro tutor per continuare.");
-        errorLabel.setVisible(true);
 
         statusLabel.setVisible(false);
         datePicker.setValue(null);
@@ -123,8 +127,8 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
         statusLabel.setVisible(false);
 
         if (selectedTutor == null) {
-            statusLabel.setText("Seleziona prima un tutor.");
-            statusLabel.setTextFill(Color.RED);
+            statusLabel.setText("Errore selezione tutor.");
+            statusLabel.setTextFill(Color.web("#f1c40f")); // Giallo
             statusLabel.setVisible(true);
             return;
         }
@@ -134,7 +138,7 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
 
         if (selectedDate == null || hourText == null || hourText.isEmpty()) {
             statusLabel.setText("Inserisci data e ora validi.");
-            statusLabel.setTextFill(Color.RED);
+            statusLabel.setTextFill(Color.web("#f1c40f")); // Giallo
             statusLabel.setVisible(true);
             return;
         }
@@ -142,7 +146,7 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
         int hour;
         try {
             hour = Integer.parseInt(hourText.split(":")[0]);
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException e) {
             statusLabel.setText("Formato ora non valido.");
             statusLabel.setVisible(true);
             return;
@@ -155,15 +159,15 @@ public class BookAppointmentCtrlGrafico extends HomeCtrlGrafico {
             appointmentPane.setVisible(false);
             showSuccess("Prenotazione Confermata", "Appuntamento prenotato con successo!");
 
-            // Pulisce la selezione per evitare doppie prenotazioni
+            // Pulisce la selezione
             selectedTutor = null;
-            errorLabel.setText("");
+            scrollResults.setVisible(false);
+            subjectField.clear();
 
         } catch (DBException e) {
-            // Gestione errore DB con Logger e UI
             LOGGER.log(Level.SEVERE, "Errore prenotazione appuntamento", e);
             statusLabel.setText("Errore: " + e.getMessage());
-            statusLabel.setTextFill(Color.RED);
+            statusLabel.setTextFill(Color.web("#e74c3c")); // Rosso chiaro
             statusLabel.setVisible(true);
         }
     }
